@@ -3,18 +3,18 @@
     <div class="design-toolbar">
       <el-button @click="index.visible=true" type="primary" title="Insert" icon="el-icon-circle-plus-outline" size="mini" circle> </el-button>
     </div>
-    <ux-grid :data="designData.editIndex" stripe style="width: 100%" :cell-style="{height: '35px'}">
-      <ux-table-column align="center" field="index_name" title="index_name" show-overflow-tooltip="true"></ux-table-column>
-      <ux-table-column align="center" field="column_name" title="column_name" show-overflow-tooltip="true"></ux-table-column>
-      <ux-table-column align="center" field="non_unique" title="non_unique" show-overflow-tooltip="true"></ux-table-column>
-      <ux-table-column align="center" field="index_type" title="index_type" show-overflow-tooltip="true"></ux-table-column>
-      <ux-table-column title="Operation" width="120">
+    <vxe-table :data="designData.editIndex" stripe style="width: 100%" :cell-style="{height: '35px'}">
+      <vxe-column align="center" field="index_name" title="index_name" show-overflow-tooltip="true"></vxe-column>
+      <vxe-column align="center" field="column_name" title="column_name" show-overflow-tooltip="true"></vxe-column>
+      <vxe-column align="center" field="non_unique" title="non_unique" show-overflow-tooltip="true"></vxe-column>
+      <vxe-column align="center" field="index_type" title="index_type" show-overflow-tooltip="true"></vxe-column>
+      <vxe-column title="Operation" width="120">
         <template v-slot="{ row }">
           <el-button @click="deleteConfirm(row)" title="delete" type="danger" size="mini" icon="el-icon-delete" circle> </el-button>
         </template>
-      </ux-table-column>
-    </ux-grid>
-    <el-dialog :title="'Add Index'" :visible.sync="index.visible" top="3vh" size="mini">
+      </vxe-column>
+    </vxe-table>
+    <el-dialog :title="'Add Index'" v-model="index.visible" top="3vh">
       <el-form :inline='true'>
         <el-form-item label="Column">
           <el-select v-model="index.column">
@@ -29,16 +29,19 @@
           </el-select>
         </el-form-item>
       </el-form>
-      <span slot="footer" class="dialog-footer">
-        <el-button type="primary" :loading="index.loading" @click="createIndex">Create</el-button>
-        <el-button @click="index.visible=false">Cancel</el-button>
-      </span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button type="primary" :loading="index.loading" @click="createIndex">Create</el-button>
+          <el-button @click="index.visible=false">Cancel</el-button>
+        </span>
+      </template>
     </el-dialog>
   </div>
 </template>
 
 <script>
 import { wrapByDb } from "@/common/wrapper";
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { inject } from "../mixin/vscodeInject";
 export default {
   mixins: [inject],
@@ -64,7 +67,7 @@ export default {
         this.init();
       })
       .on("error", (msg) => {
-        this.$message.error(msg);
+        ElMessage.error(msg);
       })
       .init();
   },
@@ -78,7 +81,7 @@ export default {
       });
     },
     deleteConfirm(row) {
-      this.$confirm("Are you sure you want to delete this index?", "Warning", {
+      ElMessageBox.confirm("Are you sure you want to delete this index?", "Warning", {
         confirmButtonText: "OK",
         cancelButtonText: "Cancel",
         type: "warning",

@@ -1,5 +1,5 @@
 var net = require('net');
-var Connection = require('ssh2');
+var { Client: Connection } = require('ssh2');
 var createConfig = require('./config');
 var events = require('events');
 var noop = function () {

@@ -1,8 +1,8 @@
 <template>
-  <el-dialog ref="editDialog" :title="editorTilte" :visible.sync="visible" width="60%" top="3vh" size="mini" :closeOnClickModal="false">
+  <el-dialog ref="editDialog" :title="editorTilte" v-model="visible" width="60%" top="3vh" :closeOnClickModal="false">
     <el-form ref="infoForm" :model="editModel" :inline="true">
-      <el-form-item :prop="column.name" :key="column.name" v-for="column in columnList" size="mini">
-        <template>
+      <el-form-item :prop="column.name" :key="column.name" v-for="column in columnList">
+        <template #default>
           <span>
             {{ column.name }} : {{ column.type }} &nbsp;
             <span style="color: red !important;">{{ column.key }}{{ column.nullable == 'YES' ? '' : ' NOT NULL' }}</span>&nbsp;
@@ -13,18 +13,21 @@
         </template>
       </el-form-item>
     </el-form>
-    <span slot="footer" class="dialog-footer">
-      <el-button @click="visible = false">Cancel</el-button>
-      <el-button v-if="model=='update'" type="primary" :loading="loading" @click="confirmUpdate(editModel)">
-        Update</el-button>
-      <el-button v-if="model=='insert'||model=='copy'" type="primary" :loading="loading" @click="confirmInsert(editModel)">
-        Insert</el-button>
-    </span>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="visible = false">Cancel</el-button>
+        <el-button v-if="model=='update'" type="primary" :loading="loading" @click="confirmUpdate(editModel)">
+          Update</el-button>
+        <el-button v-if="model=='insert'||model=='copy'" type="primary" :loading="loading" @click="confirmInsert(editModel)">
+          Insert</el-button>
+      </span>
+    </template>
   </el-dialog>
 </template>
 
 <script>
 import CellEditor from "./CellEditor.vue";
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { util } from "../../mixin/util";
 import { wrapByDb } from "@/common/wrapper";
 
@@ -44,7 +47,7 @@ export default {
   methods: {
     openEdit(originModel) {
       if (!originModel) {
-        this.$message.error("Edit row cannot be null!");
+        ElMessage.error("Edit row cannot be null!");
         return;
       }
       this.originModel = originModel;
@@ -55,7 +58,7 @@ export default {
     },
     openCopy(originModel) {
       if (!originModel) {
-        this.$message.error("Edit row cannot be null!");
+        ElMessage.error("Edit row cannot be null!");
         return;
       }
       this.originModel = originModel;
@@ -67,7 +70,7 @@ export default {
     },
     openInsert() {
       if(this.result.tableCount!=1){
-        this.$message({
+        ElMessage({
           type: "warning",
           message: "Not table found!",
         });
@@ -115,7 +118,7 @@ export default {
         this.loading = true;
         this.$emit("execute", insertSql);
       } else {
-        this.$message("Not any input, insert fail!");
+        ElMessage("Not any input, insert fail!");
       }
     },
     buildUpdateSql(currentNew, oldRow) {
@@ -125,7 +128,7 @@ export default {
         return this.confirmUpdateMongo(currentNew,oldRow);
       }
        if (!this.primaryKey) {
-        this.$message.error("This table has not primary key, cannot update!");
+        ElMessage.error("This table has not primary key, cannot update!");
         throw new Error("This table has not primary key, cannot update!")
       }
       
@@ -171,7 +174,7 @@ export default {
         this.$emit("execute", sql);
         this.loading = true;
       } else {
-        this.$message("Not any change, update fail!");
+        ElMessage("Not any change, update fail!");
       }
     },
     confirmInsertEs() {

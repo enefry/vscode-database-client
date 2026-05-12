@@ -35,11 +35,11 @@
         <el-card>
           <el-button @click="confrimSync" v-loading="loading.sync" title="Confrim Sync" type="success" size="mini">Sync
           </el-button>
-          <ux-grid :data="compareResult.sqlList" :height="remainHeight" ref="dataTable" stripe style="width: 100%" @selection-change="selectionChange">
-            <ux-table-column type="checkbox" width="40" fixed="left"> </ux-table-column>
-            <ux-table-column align="center" width="60" field="type" title="type" show-overflow-tooltip="true"></ux-table-column>
-            <ux-table-column align="center" field="sql" title="sql" show-overflow-tooltip="true"></ux-table-column>
-          </ux-grid>
+          <vxe-table :data="compareResult.sqlList" :height="remainHeight" ref="dataTable" stripe style="width: 100%" @selection-change="selectionChange">
+            <vxe-column type="checkbox" width="40" fixed="left"> </vxe-column>
+            <vxe-column align="center" width="60" field="type" title="type" show-overflow-tooltip="true"></vxe-column>
+            <vxe-column align="center" field="sql" title="sql" show-overflow-tooltip="true"></vxe-column>
+          </vxe-table>
         </el-card>
       </template>
     </div>
@@ -47,6 +47,7 @@
 </template>
 
 <script>
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { inject } from "../mixin/vscodeInject";
 export default {
   mixins: [inject],
@@ -69,14 +70,14 @@ export default {
         this.loading.compare = false;
       })
       .on("syncSuccess", () => {
-        this.$message.success("syncSuccess");
+        ElMessage.success("syncSuccess");
         this.loading.sync = false;
       })
       .on("success", () => {
         this.refresh();
       })
       .on("error", (msg) => {
-        this.$message.error(msg);
+        ElMessage.error(msg);
         this.loading.sync = false;
       })
       .init();
@@ -110,7 +111,7 @@ export default {
     confrimSync() {
       const sqlList = this.$refs.dataTable.getCheckboxRecords();
       if (!sqlList || sqlList.length == 0) {
-        this.$message.error("Need to select at least one sql!");
+        ElMessage.error("Need to select at least one sql!");
         return;
       }
       this.loading.sync = true;

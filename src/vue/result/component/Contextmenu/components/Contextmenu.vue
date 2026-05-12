@@ -3,68 +3,68 @@
 </template>
 
 <script>
-import Vue from "vue";
+import { createApp } from "vue";
+import Submenu from "./Submenu";
 import { getElementsByClassName } from "../util";
 import { COMPONENT_NAME } from "../constant";
 export default {
+  props: {
+    items: Array,
+    position: Object,
+    style: Object,
+    customClass: String,
+    onDestroy: Function
+  },
   data() {
     return {
-      items: [],
-      position: {
-        x: 0,
-        y: 0
-      },
-      style: {
-        zIndex: 2,
-        minWidth: 150
-      },
-      mainMenuInstance: null,
-      customClass: null,
+      mainMenuApp: null,
+      mainMenuContainer: null,
       mouseListening: false
     };
   },
   mounted() {
-    const SubmenuConstructor = Vue.component(COMPONENT_NAME);
-    this.mainMenuInstance = new SubmenuConstructor();
-    this.mainMenuInstance.items = this.items;
-    this.mainMenuInstance.commonClass = {
-      menu: this.$style.menu,
-      menuItem: this.$style.menu_item,
-      clickableMenuItem: this.$style.menu_item__clickable,
-      unclickableMenuItem: this.$style.menu_item__unclickable
-    };
-    this.mainMenuInstance.position = {
-      x: this.position.x,
-      y: this.position.y,
-      width: 0,
-      height: 0
-    };
-    this.mainMenuInstance.style.minWidth = this.style.minWidth;
-    this.mainMenuInstance.style.zIndex = this.style.zIndex;
-    this.mainMenuInstance.customClass = this.customClass;
-    this.mainMenuInstance.$mount();
-    document.body.appendChild(this.mainMenuInstance.$el);
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    this.mainMenuContainer = container;
+
+    const app = createApp(Submenu, {
+      items: this.items,
+      commonClass: {
+        menu: this.$style.menu,
+        menuItem: this.$style.menu_item,
+        clickableMenuItem: this.$style.menu_item__clickable,
+        unclickableMenuItem: this.$style.menu_item__unclickable
+      },
+      position: {
+        x: this.position ? this.position.x : 0,
+        y: this.position ? this.position.y : 0,
+        width: 0,
+        height: 0
+      },
+      minWidth: this.style ? this.style.minWidth : 150,
+      zIndex: this.style ? this.style.zIndex : 2,
+      customClass: this.customClass,
+      onClose: () => this.destroySelf()
+    });
+    app.component(COMPONENT_NAME, Submenu);
+    app.mount(container);
+    this.mainMenuApp = app;
     this.addListener();
   },
-  destroyed() {
+  unmounted() {
     this.removeListener();
-    if (this.mainMenuInstance) {
-      this.mainMenuInstance.close();
+    if (this.mainMenuApp) {
+      this.mainMenuApp.unmount();
+      this.mainMenuApp = null;
+    }
+    if (this.mainMenuContainer && this.mainMenuContainer.parentNode) {
+      this.mainMenuContainer.parentNode.removeChild(this.mainMenuContainer);
+      this.mainMenuContainer = null;
     }
   },
   methods: {
-    mousewheelListener() {
-      this.$destroy();
-    },
-    mouseDownListener(e) {
-      let el = e.target;
-      const menus = getElementsByClassName(this.$style.menu);
-      while (!menus.find(m => m === el) && el.parentElement) {
-        el = el.parentElement;
-      }
-      if (!menus.find(m => m === el)) {
-        this.$destroy();
-      }
+    destroySelf() {
+      if (this.onDestroy) this.onDestroy();
     },
     mouseClickListener(e) {
       let el = e.target;
@@ -84,26 +84,22 @@ export default {
         if (e.button !== 0 || unclickableMenuItems.find(m => m === el)) {
           return;
         }
-        this.$destroy();
+        this.destroySelf();
         return;
       }
       if (!menus.find(m => m === el)) {
-        this.$destroy();
+        this.destroySelf();
       }
     },
     addListener() {
       if (!this.mouseListening) {
         document.addEventListener("click", this.mouseClickListener);
-        // document.addEventListener("mousedown", this.mouseDownListener);
-        // document.addEventListener("mousewheel", this.mousewheelListener);
         this.mouseListening = true;
       }
     },
     removeListener() {
       if (this.mouseListening) {
-        window.removeEventListener("click", this.mouseClickListener);
-        // window.removeEventListener("mousedown", this.mouseDownListener);
-        // window.removeEventListener("mousewheel", this.mousewheelListener);
+        document.removeEventListener("click", this.mouseClickListener);
         this.mouseListening = false;
       }
     }

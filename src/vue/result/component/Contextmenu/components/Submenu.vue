@@ -2,21 +2,21 @@
   <transition name="contextmenu-submenu-fade">
     <div
       ref="menu"
-      :class="[commonClass.menu, 'menu', customClass]"
+      :class="[commonClassInternal.menu, 'menu', customClass]"
       :style="{left: style.left + 'px', top: style.top + 'px', minWidth: style.minWidth + 'px', zIndex: style.zIndex}"
       v-if="visible"
       @contextmenu="(e)=>e.preventDefault()"
     >
       <div class="menu_body">
-        <template v-for="(item,index) of items">
+        <template v-for="(item,index) of itemsInternal">
           <template v-if="!item.hidden">
             <div
               :class="[
-                commonClass.menuItem, commonClass.unclickableMenuItem, 
+                commonClassInternal.menuItem, commonClassInternal.unclickableMenuItem,
                 'menu_item', 'menu_item__disabled',
                 item.divided?'menu_item__divided':null
               ]"
-              :key="index"
+              :key="'disabled-' + index"
               v-if="item.disabled"
             >
               <div class="menu_item_icon" v-if="hasIcon">
@@ -27,12 +27,12 @@
             </div>
             <div
               :class="[
-                commonClass.menuItem, commonClass.unclickableMenuItem, 
+                commonClassInternal.menuItem, commonClassInternal.unclickableMenuItem,
                 'menu_item', 'menu_item__available',
                 activeSubmenu.index===index? 'menu_item_expand':null,
                 item.divided?'menu_item__divided':null
               ]"
-              :key="index"
+              :key="'children-' + index"
               @mouseenter="($event)=>enterItem($event,item,index)"
               v-else-if="item.children"
             >
@@ -44,11 +44,11 @@
             </div>
             <div
               :class="[
-                commonClass.menuItem, commonClass.clickableMenuItem, 
+                commonClassInternal.menuItem, commonClassInternal.clickableMenuItem,
                 'menu_item', 'menu_item__available',
                 item.divided?'menu_item__divided':null
               ]"
-              :key="index"
+              :key="'item-' + index"
               @mouseenter="($event)=>enterItem($event,item,index)"
               @click="itemClick(item)"
               v-else
@@ -67,7 +67,7 @@
 </template>
 
 <script>
-import Vue from "vue";
+import { createApp } from "vue";
 import {
   SUBMENU_X_OFFSET,
   SUBMENU_Y_OFFSET,
@@ -75,11 +75,25 @@ import {
   SUBMENU_OPEN_TREND_RIGHT,
   COMPONENT_NAME
 } from "../constant";
+
+// Import self for recursive submenu creation
+import Submenu from "./Submenu";
+
 export default {
   name: COMPONENT_NAME,
+  props: {
+    commonClass: Object,
+    position: Object,
+    minWidth: { type: Number, default: 150 },
+    zIndex: { type: Number, default: 2 },
+    customClass: String,
+    openTrend: { type: String, default: SUBMENU_OPEN_TREND_RIGHT },
+    items: Array,
+    onClose: Function
+  },
   data() {
     return {
-      commonClass: {
+      commonClassInternal: this.commonClass || {
         menu: null,
         menuItem: null,
         clickableMenuItem: null,
@@ -87,30 +101,25 @@ export default {
       },
       activeSubmenu: {
         index: null,
-        instance: null
+        app: null,
+        container: null
       },
-      items: [],
-      position: {
-        x: 0,
-        y: 0,
-        width: 0,
-        height: 0
-      },
+      itemsInternal: this.items || [],
+      positionInternal: this.position || { x: 0, y: 0, width: 0, height: 0 },
       style: {
         left: 0,
         top: 0,
-        zIndex: 2,
-        minWidth: 150
+        zIndex: this.zIndex || 2,
+        minWidth: this.minWidth || 150
       },
-      customClass: null,
       visible: false,
       hasIcon: false,
-      openTrend: SUBMENU_OPEN_TREND_RIGHT
+      openTrendInternal: this.openTrend || SUBMENU_OPEN_TREND_RIGHT
     };
   },
   mounted() {
     this.visible = true;
-    for (let item of this.items) {
+    for (let item of this.itemsInternal) {
       if (item.icon) {
         this.hasIcon = true;
         break;
@@ -123,14 +132,14 @@ export default {
       const menuWidth = menu.offsetWidth;
       const menuHeight = menu.offsetHeight;
 
-      (this.openTrend === SUBMENU_OPEN_TREND_LEFT
+      (this.openTrendInternal === SUBMENU_OPEN_TREND_LEFT
         ? this.leftOpen
         : this.rightOpen)(windowWidth, windowHeight, menuWidth);
 
-      this.style.top = this.position.y;
-      if (this.position.y + menuHeight > windowHeight) {
-        if (this.position.height === 0) {
-          this.style.top = this.position.y - menuHeight;
+      this.style.top = this.positionInternal.y;
+      if (this.positionInternal.y + menuHeight > windowHeight) {
+        if (this.positionInternal.height === 0) {
+          this.style.top = this.positionInternal.y - menuHeight;
         } else {
           this.style.top = windowHeight - menuHeight;
         }
@@ -139,67 +148,79 @@ export default {
   },
   methods: {
     leftOpen(windowWidth, windowHeight, menuWidth) {
-      this.style.left = this.position.x - menuWidth;
-      this.openTrend = SUBMENU_OPEN_TREND_LEFT;
+      this.style.left = this.positionInternal.x - menuWidth;
+      this.openTrendInternal = SUBMENU_OPEN_TREND_LEFT;
       if (this.style.left < 0) {
-        this.openTrend = SUBMENU_OPEN_TREND_RIGHT;
-        if (this.position.width === 0) {
+        this.openTrendInternal = SUBMENU_OPEN_TREND_RIGHT;
+        if (this.positionInternal.width === 0) {
           this.style.left = 0;
         } else {
-          this.style.left = this.position.x + this.position.width;
+          this.style.left = this.positionInternal.x + this.positionInternal.width;
         }
       }
     },
     rightOpen(windowWidth, windowHeight, menuWidth) {
-      this.style.left = this.position.x + this.position.width;
-      this.openTrend = SUBMENU_OPEN_TREND_RIGHT;
+      this.style.left = this.positionInternal.x + this.positionInternal.width;
+      this.openTrendInternal = SUBMENU_OPEN_TREND_RIGHT;
       if (this.style.left + menuWidth > windowWidth) {
-        this.openTrend = SUBMENU_OPEN_TREND_LEFT;
-        if (this.position.width === 0) {
+        this.openTrendInternal = SUBMENU_OPEN_TREND_LEFT;
+        if (this.positionInternal.width === 0) {
           this.style.left = windowWidth - menuWidth;
         } else {
-          this.style.left = this.position.x - menuWidth;
+          this.style.left = this.positionInternal.x - menuWidth;
         }
       }
+    },
+    destroyActiveSubmenu() {
+      if (this.activeSubmenu.app) {
+        this.activeSubmenu.app.unmount();
+        this.activeSubmenu.app = null;
+      }
+      if (this.activeSubmenu.container && this.activeSubmenu.container.parentNode) {
+        this.activeSubmenu.container.parentNode.removeChild(this.activeSubmenu.container);
+        this.activeSubmenu.container = null;
+      }
+      this.activeSubmenu.index = null;
     },
     enterItem(e, item, index) {
       if (!this.visible) {
         return;
       }
-      if (this.activeSubmenu.instance) {
+      if (this.activeSubmenu.app) {
         if (this.activeSubmenu.index === index) {
           return;
         } else {
-          this.activeSubmenu.instance.close();
-          this.activeSubmenu.instance = null;
-          this.activeSubmenu.index = null;
+          this.destroyActiveSubmenu();
         }
       }
       if (!item.children) {
         return;
       }
       const menuItemClientRect = e.target.getBoundingClientRect();
-      const SubmenuConstructor = Vue.component(COMPONENT_NAME);
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+
+      const submenuApp = createApp(Submenu, {
+        items: item.children,
+        openTrend: this.openTrendInternal,
+        commonClass: this.commonClassInternal,
+        position: {
+          x: menuItemClientRect.x + SUBMENU_X_OFFSET,
+          y: menuItemClientRect.y + SUBMENU_Y_OFFSET,
+          width: menuItemClientRect.width - 2 * SUBMENU_X_OFFSET,
+          height: menuItemClientRect.width
+        },
+        minWidth: typeof item.minWidth === "number" ? item.minWidth : this.style.minWidth,
+        zIndex: this.style.zIndex,
+        customClass: typeof item.customClass === "string" ? item.customClass : this.customClass,
+        onClose: () => this.destroyActiveSubmenu()
+      });
+      submenuApp.component(COMPONENT_NAME, Submenu);
+      submenuApp.mount(container);
+
       this.activeSubmenu.index = index;
-      this.activeSubmenu.instance = new SubmenuConstructor();
-      this.activeSubmenu.instance.items = item.children;
-      this.activeSubmenu.instance.openTrend = this.openTrend;
-      this.activeSubmenu.instance.commonClass = this.commonClass;
-      this.activeSubmenu.instance.position = {
-        x: menuItemClientRect.x + SUBMENU_X_OFFSET,
-        y: menuItemClientRect.y + SUBMENU_Y_OFFSET,
-        width: menuItemClientRect.width - 2 * SUBMENU_X_OFFSET,
-        height: menuItemClientRect.width
-      };
-      this.activeSubmenu.instance.style.minWidth =
-        typeof item.minWidth === "number" ? item.minWidth : this.style.minWidth;
-      this.activeSubmenu.instance.style.zIndex = this.style.zIndex;
-      this.activeSubmenu.instance.customClass =
-        typeof item.customClass === "string"
-          ? item.customClass
-          : this.customClass;
-      this.activeSubmenu.instance.$mount();
-      document.body.appendChild(this.activeSubmenu.instance.$el);
+      this.activeSubmenu.app = submenuApp;
+      this.activeSubmenu.container = container;
     },
     itemClick(item) {
       if (!this.visible) {
@@ -216,11 +237,9 @@ export default {
     },
     close() {
       this.visible = false;
-      if (this.activeSubmenu.instance) {
-        this.activeSubmenu.instance.close();
-      }
+      this.destroyActiveSubmenu();
       this.$nextTick(() => {
-        this.$destroy();
+        if (this.onClose) this.onClose();
       });
     }
   }
@@ -231,10 +250,8 @@ export default {
 .menu {
   position: fixed;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
-  /* background: #fff; */
   background: var(--vscode-menu-background);
   border-radius: 4px;
-  /* padding: 0 15px; */
 }
 .menu_body {
   display: block;
@@ -251,7 +268,6 @@ export default {
   transition: 0.2s;
 }
 .menu_item__divided {
-  /* border-bottom: 1px solid var(--vscode-menu-separatorBackground); ; */
   border-bottom: 1px solid #666A71;
 }
 .menu_item .menu_item_icon {
@@ -271,14 +287,11 @@ export default {
   width: 10px;
 }
 .menu_item__available {
-  /* color: #606266; */
   color: var(--vscode-menu-foreground);
   cursor: pointer;
 }
 .menu_item__available:hover {
-  /* background: #ecf5ff; */
   background: var(--vscode-menu-selectionBackground);
-  /* color: #409eff; */
   color: var(--vscode-menu-selectionForeground);
 }
 .menu_item__disabled {
@@ -286,9 +299,7 @@ export default {
   cursor: not-allowed;
 }
 .menu_item_expand {
-  /* background: #ecf5ff; */
   background: var(--vscode-menu-selectionBackground);
-  /* color: #409eff; */
   color: var(--vscode-menu-selectionForeground);
 }
 </style>
@@ -298,7 +309,7 @@ export default {
 .contextmenu-submenu-fade-leave-active {
   transition: opacity 0.1s;
 }
-.contextmenu-submenu-fade-enter,
+.contextmenu-submenu-fade-enter-from,
 .contextmenu-submenu-fade-leave-to {
   opacity: 0;
 }

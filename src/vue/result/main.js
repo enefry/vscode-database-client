@@ -1,22 +1,18 @@
-import Vue from 'vue'
+import { createApp } from 'vue'
 import App from './App'
-import ElementUI from 'element-ui';
-import locale from 'element-ui/lib/locale/lang/en'
-Vue.use(ElementUI, { locale });
+import ElementPlus from 'element-plus';
+import en from 'element-plus/es/locale/lang/en'
 import Contextmenu from "./component/Contextmenu"
-Vue.use(Contextmenu);
-import UmyTable from 'umy-table'
-import 'umy-table/lib/theme-chalk/index.css';
+import VxeTable from 'vxe-table'
+import 'vxe-table/lib/style.css'
+import 'element-plus/dist/index.css'
 import '@/../public/theme/auto.css'
 import '@/../public/theme/umyui.css'
 import './view.css'
 import './icon/iconfont.css'
-Vue.use(UmyTable);
 
-Vue.config.productionTip = false
-
-new Vue({
-  el: '#app',
-  components: { App },
-  template: '<App/>'
-})
+const app = createApp(App)
+app.use(ElementPlus, { locale: en })
+app.use(Contextmenu)
+app.use(VxeTable)
+app.mount('#app')

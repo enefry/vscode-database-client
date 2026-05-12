@@ -17,17 +17,17 @@
       <el-table-column prop="remotePort" label="Remote Port">
       </el-table-column>
       <el-table-column prop="state" label="State">
-        <template slot-scope="scope">
+        <template v-slot="scope">
           {{scope.row.state==true?"running":"stop"}}
         </template>
       </el-table-column>
       <el-table-column fixed="right" width="200">
-        <template slot="header" slot-scope="scope">
+        <template #header>
           <el-button type="info" icon="el-icon-circle-plus-outline" size="small" circle @click="createRequest">
           </el-button>
           <el-button type="primary" icon="el-icon-refresh" size="small" circle @click="load"> </el-button>
         </template>
-        <template slot-scope="scope">
+        <template v-slot="scope">
           <el-button v-if="!scope.row.state" @click="start(scope.row.id);" type="success" size="small" title="Start"
             icon="el-icon-video-play" circle>
           </el-button>
@@ -44,7 +44,7 @@
         </template>
       </el-table-column>
     </el-table>
-    <el-dialog ref="editDialog" :title="panel.title" :visible.sync="panel.visible" width="90%" top="3vh" size="small">
+    <el-dialog ref="editDialog" :title="panel.title" v-model="panel.visible" width="90%" top="3vh">
       <el-form ref="infoForm" :model="panel.edit" label-width="120px">
         <el-form-item size="mini" label="name">
           <el-input v-model="panel.edit.name"></el-input>
@@ -62,18 +62,21 @@
           <el-input v-model="panel.edit.remotePort"></el-input>
         </el-form-item>
       </el-form>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="panel.visible = false">Cancel</el-button>
-        <el-button type="primary" :loading="panel.loading" @click="confirmUpdate">
-          {{panel.edit.id!=null?"Update":"Create"}}
-        </el-button>
-      </span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="panel.visible = false">Cancel</el-button>
+          <el-button type="primary" :loading="panel.loading" @click="confirmUpdate">
+            {{panel.edit.id!=null?"Update":"Create"}}
+          </el-button>
+        </span>
+      </template>
     </el-dialog>
   </div>
 </template>
 
 <script>
   import { inject } from "../mixin/vscodeInject";
+  import { ElMessage, ElMessageBox } from 'element-plus';
   export default {
     mixins: [inject],
     data() {
@@ -139,7 +142,7 @@
         this.panel.visible = true;
       },
       deleteConfirm(id) {
-        this.$confirm(
+        ElMessageBox.confirm(
           "Are you sure you want to delete this forward?",
           "Warning",
           {
@@ -152,7 +155,7 @@
             this.remove(id);
           })
           .catch(() => {
-            this.$message({ type: "info", message: "Delete canceled" });
+            ElMessage({ type: "info", message: "Delete canceled" });
           });
       }
     }

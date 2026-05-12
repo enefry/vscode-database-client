@@ -4,40 +4,40 @@
     <div class="design-toolbar">
       <el-button @click="column.visible=true" type="primary" title="Insert" icon="el-icon-circle-plus-outline" size="mini" circle> </el-button>
     </div>
-    <ux-grid :data="designData.editColumnList" stripe style="width: 100%" :cell-style="{height: '25px'}" :height="remainHeight()">
-      <ux-table-column align="center" field="name" title="Name" show-overflow-tooltip="true"></ux-table-column>
-      <ux-table-column align="center" field="type" title="Type" show-overflow-tooltip="true"></ux-table-column>
-      <ux-table-column align="center" field="comment" title="Comment" show-overflow-tooltip="true"></ux-table-column>
-      <ux-table-column align="center" field="maxLength" width="80" title="Length" show-overflow-tooltip="true"></ux-table-column>
-      <ux-table-column align="center" field="defaultValue" width="120" title="Default" show-overflow-tooltip="true"></ux-table-column>
-      <ux-table-column align="center" title="Primary Key" width="100" show-overflow-tooltip="true">
+    <vxe-table :data="designData.editColumnList" stripe style="width: 100%" :cell-style="{height: '25px'}" :height="remainHeight()">
+      <vxe-column align="center" field="name" title="Name" show-overflow-tooltip="true"></vxe-column>
+      <vxe-column align="center" field="type" title="Type" show-overflow-tooltip="true"></vxe-column>
+      <vxe-column align="center" field="comment" title="Comment" show-overflow-tooltip="true"></vxe-column>
+      <vxe-column align="center" field="maxLength" width="80" title="Length" show-overflow-tooltip="true"></vxe-column>
+      <vxe-column align="center" field="defaultValue" width="120" title="Default" show-overflow-tooltip="true"></vxe-column>
+      <vxe-column align="center" title="Primary Key" width="100" show-overflow-tooltip="true">
         <template v-slot="{ row }">
           <el-checkbox disabled :checked="row.isPrimary"></el-checkbox>
         </template>
-      </ux-table-column>
-      <ux-table-column align="center" title="Unique" width="80" show-overflow-tooltip="true">
+      </vxe-column>
+      <vxe-column align="center" title="Unique" width="80" show-overflow-tooltip="true">
         <template v-slot="{ row }">
           <el-checkbox disabled :checked="row.isUnique"></el-checkbox>
         </template>
-      </ux-table-column>
-      <ux-table-column align="center" title="Not Null" width="80" show-overflow-tooltip="true">
+      </vxe-column>
+      <vxe-column align="center" title="Not Null" width="80" show-overflow-tooltip="true">
         <template v-slot="{ row }">
           <el-checkbox disabled :checked="row.nullable=='NO'"></el-checkbox>
         </template>
-      </ux-table-column>
-      <ux-table-column align="center" title="Auto Incrment" width="140" show-overflow-tooltip="true">
+      </vxe-column>
+      <vxe-column align="center" title="Auto Incrment" width="140" show-overflow-tooltip="true">
         <template v-slot="{ row }">
           <el-checkbox disabled :checked="row.isAutoIncrement"></el-checkbox>
         </template>
-      </ux-table-column>
-      <ux-table-column title="Operation" width="120">
+      </vxe-column>
+      <vxe-column title="Operation" width="120">
         <template v-slot="{ row }">
           <el-button @click="openEdit(row)" title="edit" size="mini" icon="el-icon-edit" circle> </el-button>
           <el-button @click="deleteConfirm(row)" title="delete" type="danger" size="mini" icon="el-icon-delete" circle> </el-button>
         </template>
-      </ux-table-column>
-    </ux-grid>
-    <el-dialog :title="'Update Column'" :visible.sync="column.editVisible" top="3vh" size="mini">
+      </vxe-column>
+    </vxe-table>
+    <el-dialog :title="'Update Column'" v-model="column.editVisible" top="3vh">
       <el-form :inline='true'>
         <el-form-item label="Name">
           <el-input v-model="editColumn.name"></el-input>
@@ -52,12 +52,14 @@
           <el-checkbox v-model="editColumn.isNotNull"></el-checkbox>
         </el-form-item>
       </el-form>
-      <span slot="footer" class="dialog-footer">
-        <el-button type="primary" :loading="column.editloading" @click="updateColumn">Update</el-button>
-        <el-button @click="column.editVisible=false">Cancel</el-button>
-      </span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button type="primary" :loading="column.editloading" @click="updateColumn">Update</el-button>
+          <el-button @click="column.editVisible=false">Cancel</el-button>
+        </span>
+      </template>
     </el-dialog>
-    <el-dialog :title="'Add Column'" :visible.sync="column.visible" top="3vh" size="mini">
+    <el-dialog :title="'Add Column'" v-model="column.visible" top="3vh">
       <el-form :inline='true'>
         <el-form-item label="Name">
           <el-input v-model="column.name"></el-input>
@@ -66,10 +68,12 @@
           <el-input v-model="column.type"></el-input>
         </el-form-item>
       </el-form>
-      <span slot="footer" class="dialog-footer">
-        <el-button type="primary" :loading="column.loading" @click="createcolumn">Create</el-button>
-        <el-button @click="column.visible=false">Cancel</el-button>
-      </span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button type="primary" :loading="column.loading" @click="createcolumn">Create</el-button>
+          <el-button @click="column.visible=false">Cancel</el-button>
+        </span>
+      </template>
     </el-dialog>
   </div>
 </template>
@@ -77,6 +81,7 @@
 <script>
 import { inject } from "../mixin/vscodeInject";
 import { wrapByDb } from "@/common/wrapper";
+import { ElMessage, ElMessageBox } from 'element-plus';
 import InfoPanel from "./InfoPanel";
 export default {
   mixins: [inject],
@@ -115,7 +120,7 @@ export default {
         this.init();
       })
       .on("error", (msg) => {
-        this.$message.error(msg);
+        ElMessage.error(msg);
       })
       .init();
   },
@@ -151,7 +156,7 @@ export default {
       this.column.editLoading = false;
     },
     deleteConfirm(row) {
-      this.$confirm("Are you sure you want to delete this column?", "Warning", {
+      ElMessageBox.confirm("Are you sure you want to delete this column?", "Warning", {
         confirmButtonText: "OK",
         cancelButtonText: "Cancel",
         type: "warning",

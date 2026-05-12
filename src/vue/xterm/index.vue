@@ -8,14 +8,13 @@
 </template>
 
 <script>
-    import { Terminal } from 'xterm'
-    import { FitAddon } from 'xterm-addon-fit'
-    import { WebLinksAddon } from "xterm-addon-web-links";
-    import { SearchAddon } from 'xterm-addon-search';
+    import { Terminal } from '@xterm/xterm'
+    import { FitAddon } from '@xterm/addon-fit'
+    import { WebLinksAddon } from "@xterm/addon-web-links";
+    import { SearchAddon } from '@xterm/addon-search';
     import { SearchBarAddon } from './xterm-addon-search-bar';
     import { auto } from "./theme/auto";
-    import { eventNames } from 'process';
-    require('xterm/css/xterm.css')
+    import '@xterm/xterm/css/xterm.css'
     import { inject } from "../mixin/vscodeInject";
     export default {
         mixins: [inject],
@@ -32,7 +31,6 @@
                     fontFamily: "'Consolas ligaturized',Consolas, 'Microsoft YaHei','Courier New', monospace",
                     disableStdin: false,
                     lineHeight: 1.1,
-                    rightClickSelectsWord: true,
                     cursorBlink: true, scrollback: 10000, tabStopWidth: 8, bellStyle: "sound"
                 })
 

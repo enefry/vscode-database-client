@@ -22,6 +22,7 @@
 
 <script>
 import { wrapByDb } from "@/common/wrapper";
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { inject } from "../mixin/vscodeInject";
 export default {
   mixins: [inject],
@@ -45,11 +46,11 @@ export default {
       this.designData.editIndex = [...this.designData.indexs];
     })
       .on("success", () => {
-        this.$message.success("Update success!");
+        ElMessage.success("Update success!");
         this.init();
       })
       .on("error", (msg) => {
-        this.$message.error(msg);
+        ElMessage.error(msg);
       })
       .init();
   },

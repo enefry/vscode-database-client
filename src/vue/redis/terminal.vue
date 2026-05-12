@@ -74,7 +74,7 @@ export default {
       });
     vscodeEvent.emit("route-" + this.$route.name);
   },
-  destroyed() {
+  unmounted() {
     vscodeEvent.destroy();
   },
   methods: {
@@ -112,7 +112,7 @@ export default {
 
       if (params == "exit" || params == "quit") {
         vscodeEvent.emit("ext");
-        this.$bus.$emit("removePreTab");
+        window.dispatchEvent(new CustomEvent("removePreTab"));
         return;
       }
 
@@ -127,7 +127,7 @@ export default {
       const operate = params[0];
 
       if (operate === "select" && !isNaN(params[1])) {
-        this.$bus.$emit("changeDb", this.client, params[1]);
+        window.dispatchEvent(new CustomEvent("changeDb", { detail: { client: this.client, db: params[1] } }));
       }
     },
     scrollToBottom() {

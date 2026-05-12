@@ -6,8 +6,10 @@
         {{ column.name }}
       </el-checkbox>
     </el-checkbox-group>
-    <el-button icon="el-icon-search" circle title="Select columns to show" size="mini" slot="reference">
-    </el-button>
+    <template #reference>
+      <el-button icon="el-icon-search" circle title="Select columns to show" size="mini">
+      </el-button>
+    </template>
   </el-popover>
 </div>
 </template>
@@ -15,9 +17,6 @@
 <script>
 export default {
     props:['result','toolbar'],
-    mounted(){
-        console.log(this.result)
-    }
 };
 </script>
 

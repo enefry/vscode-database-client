@@ -6,18 +6,16 @@
         <!-- key name -->
         <el-form-item>
           <el-input ref="keyNameInput" v-model="edit.name" @keyup.enter.native="rename" placeholder="set to rename key">
-            <span slot="prepend" class="key-detail-type">{{ key.type }}</span>
-            <i class="el-icon-check el-input__icon cursor-pointer" slot="suffix" :title="'Click to rename'" @click="rename">
-            </i>
+            <template #prepend><span class="key-detail-type">{{ key.type }}</span></template>
+            <template #suffix><i class="el-icon-check el-input__icon cursor-pointer" :title="'Click to rename'" @click="rename"></i></template>
           </el-input>
         </el-form-item>
 
         <!-- key ttl -->
         <el-form-item>
           <el-input v-model="edit.ttl" @keyup.enter.native="ttlKey" type='number'>
-            <span slot="prepend">TTL</span>
-            <i class="el-icon-check el-input__icon cursor-pointer" slot="suffix" :title="'Click to change ttl'" @click="ttlKey">
-            </i>
+            <template #prepend><span>TTL</span></template>
+            <template #suffix><i class="el-icon-check el-input__icon cursor-pointer" :title="'Click to change ttl'" @click="ttlKey"></i></template>
           </el-input>
         </el-form-item>
 
@@ -27,7 +25,7 @@
           <el-button type="success" @click="refresh" icon="el-icon-refresh"></el-button>
           <template v-if="key.type=='string'">
             <el-select v-model="selectedView" class='format-selector' :style='selectStyle' size='mini'>
-              <span slot="prefix" class="fa fa-sitemap"></span>
+              <template #prefix><span class="fa fa-sitemap"></span></template>
               <el-option v-for="item in viewers" :key="item.value" :label="item.text" :value="item.value">
               </el-option>
             </el-select>
@@ -69,7 +67,7 @@
             </el-form-item>
           </el-form>
           <!-- edit & add dialog -->
-          <el-dialog :title="dialogTitle" :visible.sync="editDialogVisiable">
+          <el-dialog :title="dialogTitle" v-model="editDialogVisiable">
             <el-form>
               <el-form-item label="key" v-if="key.type=='hash'">
                 <el-input v-model="addKey"></el-input>
@@ -78,10 +76,12 @@
                 <el-input v-model="addData"></el-input>
               </el-form-item>
             </el-form>
-            <div slot="footer" class="dialog-footer">
-              <el-button @click="editDialogVisiable = false">Cancel</el-button>
-              <el-button type="primary" @click="confirmAdd">Confirm</el-button>
-            </div>
+            <template #footer>
+              <div class="dialog-footer">
+                <el-button @click="editDialogVisiable = false">Cancel</el-button>
+                <el-button type="primary" @click="confirmAdd">Confirm</el-button>
+              </div>
+            </template>
           </el-dialog>
         </div>
         <!-- content table -->
@@ -90,17 +90,17 @@
             <el-table-column type="index" label="ID" sortable width="60" align="center">
             </el-table-column>
             <el-table-column v-if="key.type=='hash'" resizable sortable label="Key" align="center">
-              <template slot-scope="scope">
+              <template v-slot="scope">
                 {{scope.row.key}}
               </template>
             </el-table-column>
             <el-table-column resizable sortable show-overflow-tooltip label="Value" align="center">
-              <template slot-scope="scope">
+              <template v-slot="scope">
                 {{key.type=='hash'?scope.row.value:scope.row}}
               </template>
             </el-table-column>
             <el-table-column label="Operation" width="150" align="center">
-              <template slot-scope="scope">
+              <template v-slot="scope">
                 <el-button type="text" @click="showEditDialog(scope.row)" icon="el-icon-edit" circle  v-if="key.type=='hash'">
                 </el-button>
                 <el-button type="text" @click="deleteLine(scope.row)" icon="el-icon-delete" circle>
@@ -121,13 +121,13 @@
 
 <script>
 import formatHighlight from "json-format-highlight";
-
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { getVscodeEvent } from "../util/vscode";
 const prettyBytes = require("pretty-bytes");
 let vscodeEvent;
 
 export default {
-  destroyed() {
+  unmounted() {
     vscodeEvent.destroy();
   },
   mounted() {
@@ -144,7 +144,7 @@ export default {
             : "ViewerText";
       })
       .on("msg", (content) => {
-        this.$message.success(content);
+        ElMessage.success(content);
       })
       .on("refresh", () => {
         this.editDialogVisiable = false;
@@ -233,7 +233,7 @@ export default {
       vscodeEvent.emit("deleteLine", row);
     },
     deleteKey() {
-      this.$confirm("Are you sure you want to delete this key?", "Warning", {
+      ElMessageBox.confirm("Are you sure you want to delete this key?", "Warning", {
         confirmButtonText: "OK",
         cancelButtonText: "Cancel",
         type: "warning",

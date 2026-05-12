@@ -8,11 +8,6 @@ var webpack = require('webpack');
 module.exports = [
     {
         target: "node",
-        node: {
-            fs: 'empty', net: 'empty', tls: 'empty',
-            child_process: 'empty', dns: 'empty',
-            global: true, __dirname: true
-        },
         entry: ['./src/extension.ts'],
         output: {
             path: path.resolve(__dirname, 'out'),
@@ -22,7 +17,7 @@ module.exports = [
         },
         externals: {
             vscode: 'commonjs vscode',
-            mockjs: 'mockjs vscode',
+            mockjs: 'commonjs mockjs',
             'mongodb-client-encryption':'mongodb-client-encryption'
         },
         resolve: {
@@ -32,9 +27,12 @@ module.exports = [
             }
         },
         plugins: [
-            new webpack.IgnorePlugin(/^(pg-native|pg-cloudflare|cardinal|encoding|aws4)$/)
+            new webpack.IgnorePlugin({ resourceRegExp: /^(pg-native|pg-cloudflare|cardinal|encoding|aws4)$/ })
         ],
-        module: { rules: [{ test: /\.ts$/, exclude: /(node_modules|bin)/, use: ['ts-loader'] }] },
+        module: { rules: [
+            { test: /\.ts$/, exclude: /(node_modules|bin)/, use: ['ts-loader'] },
+            { test: /\.node$/, loader: 'node-loader' }
+        ] },
         optimization: { minimize: isProd },
         watch: !isProd,
         mode: isProd ? 'production' : 'development',
@@ -59,11 +57,11 @@ module.exports = [
         },
         resolve: {
             extensions: ['.vue', '.js'],
-            alias: { 'vue$': 'vue/dist/vue.esm.js', '@': path.resolve('src'), }
+            alias: { 'vue$': 'vue/dist/vue.esm-bundler.js', '@': path.resolve('src'), }
         },
         module: {
             rules: [
-                { test: /\.vue$/, loader: 'vue-loader', options: { loaders: { css: ["vue-style-loader", "css-loader"] } } },
+                { test: /\.vue$/, loader: 'vue-loader' },
                 { test: /(\.css|\.cssx)$/, use: ["vue-style-loader", "css-loader", { loader: "postcss-loader" }] },
                 { test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/, loader: 'url-loader', options: { limit: 80000 } }
             ]

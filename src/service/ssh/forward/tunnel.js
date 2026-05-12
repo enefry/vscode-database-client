@@ -1,5 +1,5 @@
 var net = require('net');
-var Connection = require('ssh2');
+var { Client: Connection } = require('ssh2');
 var createConfig = require('./lib/config');
 var events = require('events');
 var noop = function () {
@@ -26,7 +26,7 @@ function bindSSHConnection(config, netConnection) {
             }
             tunelMark[id] = { connection: sshConnection }
             sshStream.on('error', function (error) {
-                console.log(err)
+                console.log(error)
                 delete tunelMark[id]
             });
             if (netConnection) {
@@ -87,8 +87,8 @@ function createServer(config) {
             connection.end();
         });
         let id = getId(config)
-        try { 
-            tunelMark[id].connection.close() 
+        try {
+            tunelMark[id].connection.end()
         } finally {
             delete tunelMark[id]
         }

@@ -95,8 +95,8 @@ export class XtermTerminal implements TerminalService {
                 })
             })
             // client.on('banner', (data: string) => handler.emit('data', data.replace(/\r?\n/g, '\r\n')))
-            client.on('end', (err) => { SSHerror('CONN END BY HOST', err) })
-            client.on('close', (err) => { SSHerror('CONN CLOSE', err) })
+            client.on('end', () => { SSHerror('CONN END BY HOST', null) })
+            client.on('close', () => { SSHerror('CONN CLOSE', null) })
             client.on('error', (err) => { SSHerror('CONN ERROR', err) })
             client.on('keyboard-interactive', () => {
                 end();

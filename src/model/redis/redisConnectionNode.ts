@@ -60,7 +60,7 @@ export class RedisConnectionNode extends RedisBaseNode {
                     }
                     const splitCommand: string[] = content.replace(/ +/g, " ").split(' ')
                     const command = splitCommand.shift()
-                    const reply = await client.send_command(command, splitCommand)
+                    const reply = await client.call(command, ...splitCommand)
                     handler.emit("result", reply)
                 }).on("exit", () => {
                     handler.panel.dispose()
@@ -71,18 +71,17 @@ export class RedisConnectionNode extends RedisBaseNode {
 
     async showStatus(): Promise<any> {
         const client = await this.getClient()
-        client.info((err, reply) => {
-            ViewManager.createWebviewPanel({
-                title: "Redis Server Status", splitView: false,
-                path: "app",
-                eventHandler: (handler) => {
-                    handler.on("init", () => {
-                        handler.emit("route", 'redisStatus')
-                    }).on("route-redisStatus", async () => {
-                        handler.emit("info", reply)
-                    })
-                }
-            })
+        const reply = await client.info()
+        ViewManager.createWebviewPanel({
+            title: "Redis Server Status", splitView: false,
+            path: "app",
+            eventHandler: (handler) => {
+                handler.on("init", () => {
+                    handler.emit("route", 'redisStatus')
+                }).on("route-redisStatus", async () => {
+                    handler.emit("info", reply)
+                })
+            }
         })
     }
 

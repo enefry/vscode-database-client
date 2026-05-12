@@ -11,16 +11,16 @@ export class MongoConnection extends IConnection {
         super()
         this.option = {
             connectTimeoutMS: this.node.connectTimeout || 5000, waitQueueTimeoutMS: this.node.requestTimeout,
-            ssl: this.node.useSSL, sslValidate: false,
-            sslCert: (node.clientCertPath) ? fs.readFileSync(node.clientCertPath) : null,
-            sslKey: (node.clientKeyPath) ? fs.readFileSync(node.clientKeyPath) : null,
+            tls: this.node.useSSL,
+            tlsAllowInvalidCertificates: true,
+            tlsCertificateKeyFile: (node.clientCertPath) ? node.clientCertPath : undefined,
         } as MongoClientOptions;
     }
 
     connect(callback: (err: Error) => void): void {
         let url=this.node.connectionUrl;
         if (url) {
-          this.option = { useNewUrlParser: true}
+          this.option = {}
         } else {
           url = `mongodb://${this.node.host}:${this.node.port}`;
           if (this.node.user || this.node.password) {
@@ -29,13 +29,14 @@ export class MongoConnection extends IConnection {
             url = `mongodb://${escapedUser}:${escapedPassword}@${this.node.host}:${this.node.port}`;
           }
         }
-        MongoClient.connect(url, this.option, (err, client) => {
-          if (!err) {
+        MongoClient.connect(url, this.option).then(client => {
             this.client = client;
             this.conneted = true;
-          }
-          callback(err)
-        })
+            client.on('close', () => { this.conneted = false; });
+            callback(null);
+        }).catch(err => {
+            callback(err);
+        });
       }
 
     run(callback: (client: MongoClient) => void) {
@@ -51,9 +52,11 @@ export class MongoConnection extends IConnection {
     commit(): void {
     }
     end(): void {
+        this.conneted = false;
+        this.client?.close().catch(() => {});
     }
     isAlive(): boolean {
-        return this.conneted && this.client && this.client.isConnected();
+        return this.conneted && this.client != null;
     }
 
     query(sql: string, callback?: queryCallback): void;
@@ -65,7 +68,6 @@ export class MongoConnection extends IConnection {
         if (sql == 'show dbs') {
             this.client.db().admin().listDatabases().then((res) => {
                 callback(null, res.databases.map((db: any) => ({ Database: db.name })))
-                console.log(res)
             })
         } else {
             try {
@@ -74,10 +76,10 @@ export class MongoConnection extends IConnection {
                     callback(null)
                 } else if (Number.isInteger(result)) {
                     callback(null, result)
-                } else if (result.insertedCount != undefined) {
-                    callback(null, { affectedRows: result.insertedCount })
-                } else if (result.updatedCount != undefined) {
-                    callback(null, { affectedRows: result.updatedCount })
+                } else if (result.insertedId != undefined) {
+                    callback(null, { affectedRows: 1 })
+                } else if (result.modifiedCount != undefined) {
+                    callback(null, { affectedRows: result.modifiedCount })
                 } else if (result.deletedCount != undefined) {
                     callback(null, { affectedRows: result.deletedCount })
                 } else {

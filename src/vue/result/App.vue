@@ -2,32 +2,39 @@
   <div id="app">
     <div class="hint">
       <div style="width:95%;">
-        <el-input type="textarea" :autosize="{ minRows:2, maxRows:5}" v-model="toolbar.sql" class="sql-pannel" @keypress.native="panelInput" />
+        <el-input type="textarea" :autosize="{ minRows:2, maxRows:5}" v-model="toolbar.sql" class="sql-pannel" @keypress="panelInput" />
       </div>
-      <Toolbar :page="page" :showFullBtn="showFullBtn" :search.sync="table.search" :costTime="result.costTime" @changePage="changePage" @sendToVscode="sendToVscode" @export="exportOption.visible = true" @insert="$refs.editor.openInsert()" @deleteConfirm="deleteConfirm" @run="info.message = false;execute(toolbar.sql);" />
+      <Toolbar :page="page" :showFullBtn="showFullBtn" v-model:search="table.search" :costTime="result.costTime" @changePage="changePage" @sendToVscode="sendToVscode" @export="exportOption.visible = true" @insert="$refs.editor.openInsert()" @deleteConfirm="deleteConfirm" @run="info.message = false;execute(toolbar.sql);" />
       <div v-if="info.message ">
         <div v-if="info.error" class="info-panel" style="color:red !important" v-html="info.message"></div>
         <div v-if="!info.error" class="info-panel" style="color: green !important;" v-html="info.message"></div>
       </div>
     </div>
     <!-- trigger when click -->
-    <ux-grid ref="dataTable" :data="filterData" v-loading='table.loading' size='small' :cell-style="{height: '35px'}" @sort-change="sort" :height="remainHeight" width="100vh" stripe :checkboxConfig="{ checkMethod: selectable}">
-      <ux-table-column type="checkbox" width="40" fixed="left"></ux-table-column>
-      <ux-table-column type="index" width="40" :seq-method="({row,rowIndex})=>(rowIndex||!row.isFilter)?rowIndex:undefined">
-        <Controller slot="header" :result="result" :toolbar="toolbar" />
-      </ux-table-column>
-      <ux-table-column v-for="(field,index) in (result.fields||[]).filter(field=>toolbar.showColumns.includes(field.name.toLowerCase()))" :key="index" :resizable="true" :field="field.name" :title="field.name" :sortable="true" :width="computeWidth(field,0)" edit-render>
-        <Header slot="header" slot-scope="scope" :result="result" :scope="scope" :index="index" />
-        <Row slot-scope="scope" :scope="scope" :result="result" :filterObj="toolbar.filter" :editList.sync="update.editList" @execute="execute" @sendToVscode="sendToVscode" @openEditor="openEditor" />
-      </ux-table-column>
-    </ux-grid>
+    <vxe-table ref="dataTable" :data="filterData" v-loading='table.loading' size='small' :cell-style="{height: '35px'}" @sort-change="sort" :height="remainHeight" width="100vh" stripe :checkboxConfig="{ checkMethod: selectable}">
+      <vxe-column type="checkbox" width="40" fixed="left"></vxe-column>
+      <vxe-column type="index" width="40" :seq-method="({row,rowIndex})=>(rowIndex||!row.isFilter)?rowIndex:undefined">
+        <template #header>
+          <Controller :result="result" :toolbar="toolbar" />
+        </template>
+      </vxe-column>
+      <vxe-column v-for="(field,index) in (result.fields||[]).filter(field=>toolbar.showColumns.includes(field.name.toLowerCase()))" :key="index" :resizable="true" :field="field.name" :title="field.name" :sortable="true" :width="computeWidth(field,0)" edit-render>
+        <template #header="scope">
+          <Header :result="result" :scope="scope" :index="index" />
+        </template>
+        <template v-slot="scope">
+          <Row :scope="scope" :result="result" :filterObj="toolbar.filter" v-model:editList="update.editList" @execute="execute" @sendToVscode="sendToVscode" @openEditor="openEditor" />
+        </template>
+      </vxe-column>
+    </vxe-table>
     <EditDialog ref="editor" :dbType="result.dbType" :result="result" :database="result.database" :table="result.table" :primaryKey="result.primaryKey" :primaryKeyList="result.primaryKeyList" :columnList="result.columnList" @execute="execute" />
-    <ExportDialog :visible.sync="exportOption.visible" @exportHandle="confirmExport" />
+    <ExportDialog v-model:visible="exportOption.visible" @exportHandle="confirmExport" />
   </div>
 </template>
 
 <script>
 import { getVscodeEvent } from "../util/vscode";
+import { ElMessage, ElMessageBox } from 'element-plus';
 import Row from "./component/Row";
 import Controller from "./component/Row/Controller.vue";
 import Header from "./component/Row/Header.vue";
@@ -141,7 +148,7 @@ export default {
       }
       this.update.editList = [];
       this.update.lock = false;
-      this.$message({
+      ElMessage({
         showClose: true,
         duration: 500,
         message: "Update Success",
@@ -203,7 +210,7 @@ export default {
           break;
         case "MESSAGE":
           if (response.message) {
-            this.$message({
+            ElMessage({
               showClose: true,
               duration: 1000,
               message: response.message,
@@ -290,13 +297,13 @@ export default {
     deleteConfirm() {
       const datas = this.$refs.dataTable.getCheckboxRecords();
       if (!datas || datas.length == 0) {
-        this.$message({
+        ElMessage({
           type: "warning",
           message: "You need to select at least one row of data.",
         });
         return;
       }
-      this.$confirm("Are you sure you want to delete this data?", "Warning", {
+      ElMessageBox.confirm("Are you sure you want to delete this data?", "Warning", {
         confirmButtonText: "OK",
         cancelButtonText: "Cancel",
         type: "warning",
@@ -339,9 +346,9 @@ export default {
         })
         .catch((e) => {
           if (e) {
-            this.$message.error(e);
+            ElMessage.error(e);
           } else {
-            this.$message({ type: "warning", message: "Delete canceled" });
+            ElMessage({ type: "warning", message: "Delete canceled" });
           }
         });
     },

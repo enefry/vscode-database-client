@@ -11,9 +11,14 @@
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "skipLibCheck": true,
+        "strict": false,
+        "noImplicitAny": false,
+        "strictNullChecks": false,
+        "ignoreDeprecations": "6.0",
         "typeRoots": ["./node_modules/@types"],
         "sourceMap": true,
         "baseUrl": ".",
+        "rootDir": "./src",
         "paths": {
             "@/*": [
                 "./src/*"

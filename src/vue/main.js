@@ -1,20 +1,15 @@
-import Vue from 'vue'
+import { createApp } from 'vue'
 import App from './App'
-import ElementUI from 'element-ui';
-import locale from 'element-ui/lib/locale/lang/en'
-import VueRouter from 'vue-router'
-import UmyTable from 'umy-table'
+import ElementPlus from 'element-plus';
+import en from 'element-plus/es/locale/lang/en'
+import { createRouter, createWebHashHistory } from 'vue-router'
+import VxeTable from 'vxe-table'
+import 'vxe-table/lib/style.css'
 
-import 'umy-table/lib/theme-chalk/index.css';
 import '@/../public/theme/auto.css'
 import '@/../public/theme/umyui.css'
-import "tailwindcss/tailwind.css"
-
-Vue.use(VueRouter)
-Vue.use(ElementUI, { locale });
-Vue.use(UmyTable);
-
-Vue.config.productionTip = false
+import 'element-plus/dist/index.css'
+import 'tailwindcss/tailwind.css'
 
 import connect from "./connect";
 import status from "./status";
@@ -26,7 +21,8 @@ import redisStatus from "./redis/redisStatus";
 import forward from "./forward";
 import sshTerminal from "./xterm";
 
-const router = new VueRouter({
+const router = createRouter({
+  history: createWebHashHistory(),
   routes: [
     { path: '/connect', component: connect, name: 'connect' },
     { path: '/status', component: status, name: 'status' },
@@ -42,9 +38,8 @@ const router = new VueRouter({
   ]
 })
 
-new Vue({
-  el: '#app',
-  components: { App },
-  router,
-  template: '<App/>'
-})
+const app = createApp(App)
+app.use(router)
+app.use(ElementPlus, { locale: en })
+app.use(VxeTable)
+app.mount('#app')
