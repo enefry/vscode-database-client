@@ -15,7 +15,7 @@ export class SqliTeDialect extends SqlDialect{
         throw new Error("Method not implemented.");
     }
     showTables(database: string): string {
-        return `SELECT name, type FROM sqlite_master WHERE type="table" AND name <> 'sqlite_sequence' AND name <> 'sqlite_stat1' ORDER BY type ASC, name ASC;`;
+        return `SELECT name, type FROM sqlite_master WHERE type='table' AND name <> 'sqlite_sequence' AND name <> 'sqlite_stat1' ORDER BY type ASC, name ASC;`;
     }
     addColumn(table: string): string {
         throw new Error("Method not implemented.");
@@ -24,7 +24,7 @@ export class SqliTeDialect extends SqlDialect{
         return `PRAGMA table_info(${table})`;
     }
     showViews(database: string): string {
-        return `SELECT name, type FROM sqlite_master WHERE type="view" AND name <> 'sqlite_sequence' AND name <> 'sqlite_stat1' ORDER BY type ASC, name ASC;`;
+        return `SELECT name, type FROM sqlite_master WHERE type='view' AND name <> 'sqlite_sequence' AND name <> 'sqlite_stat1' ORDER BY type ASC, name ASC;`;
     }
     showUsers(): string {
         throw new Error("Method not implemented.");
